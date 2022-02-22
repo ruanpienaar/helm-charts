@@ -1,6 +1,27 @@
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-configmap
+  {{- template "simple-config-map.labels" . }}
 data:
+  {{- range $path, $_ := .Files.Glob "*.toml" }}
+  {{ $path }}: |-
+    {{ $.Files.Get $path }}
+  {{- end }}
+{{ (.Files.Glob "*.txt").AsConfig | indent 2 }}
+
   myvalue: "Hello World"
+{{- with .Values.favorite }}
+  drink: {{ .drink | default "tea" | quote }}
+  food: {{ .food | upper  | quote }}
+{{- if eq .drink "coffee" }}
+{{ indent 2 "mug: true" }}
+{{- end }}
+{{- end }}
+  toppings: |-
+    {{- range $.Values.pizzaToppings }}
+    - {{ . | title | quote }}
+    {{- end }}
+{{ include "simple-config-map.app" . | indent 2}}
+  salad: {{ .Values.global.salad }}
